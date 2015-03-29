@@ -182,7 +182,7 @@ def f_13():
     assert is_diff(my, sh) is False, "paste col1.txt col2.txt"
 
 
-def f_14(filename,N):
+def f_14(filename, N):
     head = []
     count = 1
     for i in open(filename,"r"):
@@ -196,7 +196,7 @@ def f_14(filename,N):
     assert is_diff(my, sh) is False, "head"
 
 
-def f_15(filename,N):
+def f_15(filename, N):
     f = open(filename,"r")
     line_num = sum([1 for i in f])
 
@@ -213,6 +213,35 @@ def f_15(filename,N):
     sh = commands.getoutput("tail -n %d %s"%(N,filename))
     assert is_diff(my, sh) is False, "tail"
 
+
+def f_16(filename, line_num):
+    # by command "split": split -l line_num filename
+    f = open(filename,"r")
+    splited = []
+    f.seek(0)
+    counter = 0
+    for line in f:
+        if counter == 0:
+            splited.append([])
+        splited[-1].append(line)
+        counter += 1
+        if line_num <= counter:
+            counter = 0
+
+    # lazy check for code validation
+    for i in splited:
+        print len(i)
+
+
+def f_17(filename):
+    first_column = []
+    for line in open("hightemp.txt","r"):
+        first_column.append(line.strip().split("\t")[0])
+    my = len(set(first_column))
+    sh = int(commands.getoutput("cat hightemp.txt | cut -f 1 | sort | uniq | wc -l"))
+    assert (my == sh), "Number of unique strings"
+
+
 def main():
     #f_00()
     #f_01()
@@ -224,12 +253,14 @@ def main():
     #f_07()
     #f_08()
     #f_09()
-    f_10()
-    f_11()
-    f_12()
-    f_13()
-    f_14("hightemp.txt",10)
-    f_15("hightemp.txt",10)
+    #f_10()
+    #f_11()
+    #f_12()
+    #f_13()
+    #f_14("hightemp.txt",10)
+    #f_15("hightemp.txt",10)
+    #f_16("hightemp.txt",9)
+    f_17("hightemp.txt")
 
 if __name__ == "__main__":
     main()
