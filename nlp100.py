@@ -2,6 +2,9 @@
 
 # http://www.cl.ecei.tohoku.ac.jp/nlp100/ より
 
+##################
+# Chapter 1.     #
+##################
 def f_00():
     print "".join([i for i in "stressed"][::-1])
 
@@ -123,6 +126,93 @@ def f_09():
     print typoglycemia(example)
 
 
+##################
+# Chapter 2.     #
+##################
+
+import commands
+
+def is_diff(my,sh):
+    if len(my) != len(sh):
+        return True
+ 
+    for m,s in zip(my,sh):
+        if m != s:
+            return True
+    return False
+
+def f_10():
+    my = str(sum([1 for i in open("hightemp.txt","r")]))+" hightemp.txt"
+    sh = commands.getoutput("wc -l hightemp.txt")
+    assert is_diff(my,sh) is False, "line count"
+
+
+def f_11():
+    my = ("".join([i.replace("\t"," ") for i in open("hightemp.txt","r")])).strip()
+    sh =  commands.getoutput("cat hightemp.txt | sed -e 's/\t/ /g'")
+    assert is_diff(my, sh) is False, "replace tab to space"
+
+
+def f_12():
+    f = open("hightemp.txt","r")
+    col1 = open("col1.txt","w")
+    col2 = open("col2.txt","w")
+    for _line in f:
+         line = _line.strip().split("\t")
+         col1.write(line[0]+"\n")
+         col2.write(line[1]+"\n")
+    col1.close()
+    col2.close()
+
+    col1_read = ("".join(open("col1.txt","r").readlines())).strip()
+    col1_result = commands.getoutput("cat hightemp.txt | cut -f 1")
+    assert is_diff(col1_read, col1_result) is False,"col1.txt"
+
+    col2_read = ("".join(open("col2.txt","r").readlines())).strip()
+    col2_result = commands.getoutput("cat hightemp.txt | cut -f 2")
+    assert is_diff(col2_read, col2_result) is False,"col2.txt"
+
+
+def f_13():
+    col1 = open("col1.txt","r")
+    col2 = open("col2.txt","r")
+    my = ("".join([c1.strip()+"\t"+c2 for c1,c2 in zip(col1,col2)])).strip()
+    sh = commands.getoutput("paste col1.txt col2.txt")
+
+    assert is_diff(my, sh) is False, "paste col1.txt col2.txt"
+
+
+def f_14(filename,N):
+    head = []
+    count = 1
+    for i in open(filename,"r"):
+        head.append(i)
+        if N <= count:
+            break
+        count += 1
+    my = ("".join(head)).strip()
+    sh = commands.getoutput("head -n %d %s"%(N,filename))
+
+    assert is_diff(my, sh) is False, "head"
+
+
+def f_15(filename,N):
+    f = open(filename,"r")
+    line_num = sum([1 for i in f])
+
+    f.seek(0)
+    tail = []
+    count = line_num - N
+    for line in f:
+        if count > 0:
+            count -= 1
+            continue
+        tail.append(line)
+
+    my = ("".join(tail)).strip()
+    sh = commands.getoutput("tail -n %d %s"%(N,filename))
+    assert is_diff(my, sh) is False, "tail"
+
 def main():
     #f_00()
     #f_01()
@@ -134,6 +224,12 @@ def main():
     #f_07()
     #f_08()
     #f_09()
+    f_10()
+    f_11()
+    f_12()
+    f_13()
+    f_14("hightemp.txt",10)
+    f_15("hightemp.txt",10)
 
 if __name__ == "__main__":
     main()
