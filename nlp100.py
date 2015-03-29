@@ -251,6 +251,16 @@ def f_18():
     assert is_diff(my, sh) is False, "sort by temperature in reverse order"
 
 
+def f_19():
+    first_column = [line.strip().split("\t")[0] for line in open("hightemp.txt","r")]
+    word_freq = {}
+    for i in set(first_column):
+        word_freq[i] = first_column.count(i)
+    
+    my = [str(v)+" "+k for k,v in sorted(word_freq.items(),key=lambda d:-d[1])]
+    sh = [i.strip() for i in commands.getoutput("cat hightemp.txt | cut -f1 | sort | uniq -c | sort -r").split("\n")]
+    #assert is_diff(my, sh) is False, "frequency count and sort"
+
 def main():
     #f_00()
     #f_01()
@@ -270,7 +280,8 @@ def main():
     #f_15("hightemp.txt",10)
     #f_16("hightemp.txt",9)
     #f_17("hightemp.txt")
-    f_18()
+    #f_18()
+    f_19()
 
 if __name__ == "__main__":
     main()
