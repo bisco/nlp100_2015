@@ -6,7 +6,7 @@
 # Chapter 1.     #
 ##################
 def f_00():
-    print "".join([i for i in "stressed"][::-1])
+    print "stressed"[::-1]
 
 
 def f_01():
