@@ -242,6 +242,15 @@ def f_17(filename):
     assert (my == sh), "Number of unique strings"
 
 
+def f_18():
+    hightemp_list = sorted([tuple(line.strip().split("\t"))  for line in open("hightemp.txt","r")],
+                           key=lambda x:-float(x[2]))
+
+    my = [i[2] for i in hightemp_list]
+    sh = commands.getoutput("cat hightemp.txt | sort -n -k3 -r | cut -f3").split("\n")
+    assert is_diff(my, sh) is False, "sort by temperature in reverse order"
+
+
 def main():
     #f_00()
     #f_01()
@@ -260,7 +269,8 @@ def main():
     #f_14("hightemp.txt",10)
     #f_15("hightemp.txt",10)
     #f_16("hightemp.txt",9)
-    f_17("hightemp.txt")
+    #f_17("hightemp.txt")
+    f_18()
 
 if __name__ == "__main__":
     main()
