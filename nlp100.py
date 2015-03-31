@@ -161,6 +161,7 @@ def f_12():
          line = _line.strip().split("\t")
          col1.write(line[0]+"\n")
          col2.write(line[1]+"\n")
+    f.close()
     col1.close()
     col2.close()
 
@@ -261,6 +262,55 @@ def f_19():
     sh = [i.strip() for i in commands.getoutput("cat hightemp.txt | cut -f1 | sort | uniq -c | sort -r").split("\n")]
     #assert is_diff(my, sh) is False, "frequency count and sort"
 
+
+
+##################
+# Chapter 3.     #
+##################
+def get_uk_article():
+    import json
+    _JSON_FILENAME = "jawiki-country.json"
+    with open(_JSON_FILENAME, "r") as f:
+        # json.load cannot read multiple json object 
+        for i in f:
+            json_obj = json.loads(i)
+            if json_obj["title"] == u"イギリス":
+                break
+    return json_obj["text"]
+
+
+def f_20():
+    print get_uk_article()
+
+
+def get_category_line():
+    return [i for i in get_uk_article().split("\n") if "Category" in i]
+
+
+def f_21():
+    for i in get_category_line():
+        print i
+
+
+def f_22():
+    for line in get_category_line():
+        print line.replace("[","").replace("]","").split(":")[1]
+
+
+def f_23():
+    for line in get_uk_article().split("\n"):
+        if "==" in line:
+            category_level = line.count("=") // 2 - 1
+            print "LV:%d => %s"%(category_level,line)
+
+def f_24():
+    for line in get_uk_article().split("\n"):
+        # [format] 
+        # (File|ファイル):<media filename>|...
+        # a line should splited by ":" and "|"
+        if "File" in line or u"ファイル" in line:
+            print line.split(":")[1].split("|")[0]
+    
 def main():
     #f_00()
     #f_01()
@@ -281,7 +331,12 @@ def main():
     #f_16("hightemp.txt",9)
     #f_17("hightemp.txt")
     #f_18()
-    f_19()
+    #f_19()
+    #f_20()
+    #f_21()
+    #f_22()
+    #f_23()
+    f_24()
 
 if __name__ == "__main__":
     main()
