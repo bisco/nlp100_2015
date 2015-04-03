@@ -10,7 +10,7 @@ def f_00():
 
 
 def f_01():
-    s = u"パタトクカシー"
+    s = u"パタトクカシーー"
     print "".join([s[i] for i in range(len(s)) if i % 2 == 0])
 
 
@@ -307,10 +307,174 @@ def f_24():
     for line in get_uk_article().split("\n"):
         # [format] 
         # (File|ファイル):<media filename>|...
-        # a line should splited by ":" and "|"
+        # a line should be split by ":" and "|"
         if "File" in line or u"ファイル" in line:
             print line.split(":")[1].split("|")[0]
+
+def f_25():
+    base_info = False
+    dic = {}
+    for line in get_uk_article().split("\n"):
+        if u"基礎情報" in line:
+            base_info = True
+            continue
+        if "}}" == line:
+            break
+        if base_info:
+            if line.find("|") == 0:
+                line = line.replace("|","")
+                left_equal_idx = line.find("=")
+                key = line[:left_equal_idx]
+                val = line[left_equal_idx+1:]
+                dic[key] = val
+            else:
+                dic[key] += line
+
+    for i in dic.keys():
+        print i,dic[i]
+    return dic
+
+
+def remove_accent(line):
+    line = line.replace("'''''","")
+    line = line.replace("'''","")
+    line = line.replace("''","")
+    return line
+
+
+def f_26():
+    base_info = False
+    dic = {}
+    for line in get_uk_article().split("\n"):
+        if u"基礎情報" in line:
+            base_info = True
+            continue
+        if "}}" == line:
+            break
+        if base_info:
+            line = remove_accent(line)
+            if line.find("|") == 0:
+                line = line.replace("|","")
+                left_equal_idx = line.find("=")
+                key = line[:left_equal_idx]
+                dic[key] = line[left_equal_idx+1:]
+            else:
+                dic[key] += line
+
+    for i in dic.keys():
+        print i,dic[i]
+    return dic
+ 
+
+def remove_internal_link(line):
+    if not (("[[" in line) and not (u"ファイル:" in line)):
+        return line
+
+    while "[[" in line:
+        left_idx = line.find("[[")
+        right_idx = line.find("]]")
+        link = line[left_idx+2:right_idx]
+        if "|" in link:
+            if line.find("|") == 0:
+                mid_idx = line[1:].find("|")
+            else:
+                mid_idx = line.find("|")
+            display = line[mid_idx+2:right_idx]
+        else:
+            display = link
+        line = line[:left_idx]+display+line[right_idx+2:]
+    return line
+
+def f_27():
+    base_info = False
+    dic = {}
+    for line in get_uk_article().split("\n"):
+        if u"基礎情報" in line:
+            base_info = True
+            continue
+        if "}}" == line:
+            break
+
+        if base_info:
+            # remove accent markup
+            line = remove_accent(line)
+            # remove internal link
+            line = remove_internal_link(line)
+
+            if line.find("|") == 0:
+                line = line[1:]
+                left_equal_idx = line.find("=")
+                key = line[:left_equal_idx].strip()
+                dic[key] = line[left_equal_idx+1:].strip()
+            else:
+                dic[key] += line
+
+    #for i in dic.keys():
+    #    print i,dic[i]
+    return dic
+ 
+def remove_file(line):
+    if u"ファイル:" not in line:
+        return line
+    filename = line.replace("[[","").replace("]]","").replace(u"ファイル:","").strip()
+    filename = filename.split("|")[0]
+    return filename
+
+def remove_category(line):
+    if "Category:" not in line:
+        return line
+    category = line.replace("[[","").replace("]]","").replace("Category:","").split("|")[0].strip()
+    return category
+
+def remove_link(line):
+    if "[" not in line:
+        return line
+    link_start = line.find("[")
+    link_mid = line[link_start:].find(" ")+len(line[:link_start])+1
+    link_end = line.find("]")
+    return line[:link_start]+line[link_mid:link_end]+line[link_end+1:]
+
+def remove_list(line):
+    import re
+    bare_list = re.sub("^\*+","",line)
+    bare_list = re.sub("^#+","",line)
+    return bare_list
+
+def remove_template(line):
+    line = line.replace("{{","").replace("}}","")
+    if "|" in line:
+        line = line.split("|")[-1].strip()
+    return line
+
+def f_28():
+    dic = f_27()
+    for k,v in dic.items():
+        line = v.strip().split("\n")
+        dic[k] = []
+        for i in line:
+            i = remove_file(i)
+            i = remove_category(i)
+            i = remove_link(i)
+            i = remove_list(i)
+            i = remove_template(i)
+            dic[k].append(i)
+        print k,
+        for i in dic[k]:
+            print i
+
+def f_29():
+    dic = f_27()
+    filename = dic[u"国旗画像"]
+    api_url = "http://en.wikipedia.org/w/api.php?action=query&titles=Image:"+filename.replace(" ","%20")+"&prop=imageinfo&iiprop=url&format=json"
     
+    import urllib2
+    resp = urllib2.urlopen(api_url)
+    import json
+    json_obj = json.loads(resp.read())
+    for k,v in json_obj["query"]["pages"].items():
+        print json_obj["query"]["pages"][k]["imageinfo"][0]["url"]
+    
+
 def main():
     #f_00()
     #f_01()
@@ -336,7 +500,12 @@ def main():
     #f_21()
     #f_22()
     #f_23()
-    f_24()
+    #f_24()
+    #f_25()
+    #f_26()
+    #f_27()
+    #f_28()
+    f_29()
 
 if __name__ == "__main__":
     main()
