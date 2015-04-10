@@ -479,45 +479,57 @@ def f_29():
 ##################
 def load_morpheme():
     MORPH_FILENAME = "neko.txt.mecab"
-    morph_list = []
+    morph_list = [[]]
     with open(MORPH_FILENAME, "r") as f:
         for line in f:
             if line.strip() == "EOS":
+                if morph_list[-1] != []:
+                    morph_list.append([])
                 continue
             line = line.strip().split("\t")
-            morph_list.append({unicode(line[1],"utf-8"):unicode(line[0],"utf-8")})
+            morph_list[-1].append({unicode(line[1],"utf-8"):unicode(line[0],"utf-8")})
     return morph_list
 
 def f_30():
-    for i in load_morpheme():
-        for k,v in i.items():
-            print k, v
+    for j in load_morpheme():
+        for i in j:
+            for k,v in i.items():
+                print k, v
 
 def f_31():
     # 一  名詞,数,*,*,*,*,一,イチ,イチ
     # 表層形 = 単語そのもの (= 辞書エントリ) 
-    for i in load_morpheme():
-        for k,v in i.items():
-            if u"動詞" == k.strip().split(",")[0]:
-                print v
+    for j in load_morpheme():
+        for i in j:
+            for k,v in i.items():
+                if u"動詞" == k.strip().split(",")[0]:
+                    print v,k
 
 def f_32():
     # つか    動詞,自立,*,*,五段・カ行イ音便,未然形,つく,ツカ,ツカ
     # v     k:0    1    2 3 4                5      6(原形)
-    for i in load_morpheme():
-        for k,v in i.items():
-          key_list = k.strip().split(",")
-          if u"動詞" == key_list[0]:
-              print key_list[6],k
+    for j in load_morpheme():
+        for i in j:
+            key_list = k.strip().split(",")
+            if u"動詞" == key_list[0]:
+                print key_list[6],k
 
 def f_33():
     # 装飾    名詞,サ変接続,*,*,*,*,装飾,ソウショク,ソーショク
     # v     k:0    1        2 3 4 5 6(原形)
-    for i in load_morpheme():
-        for k,v in i.items():
+    for j in load_morpheme():
+        for i in j:
+            k,v = i.items()[0]
             key_list = k.strip().split(",")
             if u"名詞" == key_list[0] and u"サ変接続" == key_list[1]:
                 print key_list[6],k
+
+
+def get_word_type(word_dic):
+    return word_dic.items()[0][0].strip().split(",")[0]
+
+def get_word(word_dic):
+    return word_dic.items()[0][1]
 
 def f_34():
     # example
@@ -525,67 +537,84 @@ def f_34():
     # の  助詞,連体化,*,*,*,*,の,ノ,ノ
     # 掌  名詞,一般,*,*,*,*,掌,テノヒラ,テノヒラ
     # このやり方だと名詞(接尾)も含まれるので、日本語としてはおかしいものが混ざる
-    morph_list = load_morpheme()
-    for idx in range(len(morph_list)-2):
-        head = morph_list[idx].items()[0][0].strip().split(",")
-        if u"名詞" != head[0]:
-            continue
+    for morph_list in load_morpheme():
+        for idx in range(len(morph_list)-2):
+            head = get_word_type(morph_list[idx])
+            if u"名詞" != head[0]:
+                continue
 
-        mid = morph_list[idx+1].items()[0][0].strip().split(",")
-        if not(u"助詞" == mid[0] and u"連体化" == mid[1]):
-            continue
+            mid = get_word_type(morph_list[idx+1])
+            if not(u"助詞" == mid[0] and u"連体化" == mid[1]):
+                continue
 
-        tail = morph_list[idx+2].items()[0][0].strip().split(",")
-        if u"名詞" != tail[0]:
-            continue
+            tail = get_word_type(morph_list[idx+2])
+            if u"名詞" != tail[0]:
+                continue
 
-        print "#########################"
-        print morph_list[idx].items()[0][0]
-        print morph_list[idx+1].items()[0][0]
-        print morph_list[idx+2].items()[0][0]
-        print "#########################"
+            print "#########################"
+            print morph_list[idx].items()[0][0]
+            print morph_list[idx+1].items()[0][0]
+            print morph_list[idx+2].items()[0][0]
+            print "#########################"
 
 
 def f_35():
-    def get_word_type(word_dic):
-        return word_dic.items()[0][0].strip().split(",")[0]
-
-    def get_word(word_dic):
-        return word_dic.items()[0][1]
-
     longest = []
     tmp = []
-    for i in load_morpheme():
-        if u"名詞" == get_word_type(i):
-            tmp.append(i)
-        else:
-            if len(tmp) > len(longest):
-                longest = tmp
-            tmp = []
+    for j in load_morpheme():
+        for i in j:
+            if u"名詞" == get_word_type(i):
+                tmp.append(i)
+            else:
+                if len(tmp) > len(longest):
+                    longest = tmp
+                tmp = []
 
     for i in longest:
         print i.items()[0][1],
 
 
+
 def get_counter():
-    counter = {}
-    for i in load_morpheme():
-        origword = get_origword(i)
-        if origword in counter:
-            counter[origword] += 1
-        else:
-            counter[origword] = 1
-
-    return counter
-
-def f_36():
     def get_origword(word_dic):
         return word_dic.items()[0][0].strip().split(",")[6]
 
+    counter = {}
+    for j in load_morpheme():
+        for i in j:
+            if get_word_type(i) == u"記号":
+                continue
+            origword = get_origword(i)
+            if origword in counter:
+                counter[origword] += 1
+            else:
+                counter[origword] = 1
+
+    return counter
+
+
+
+def f_36():
     for i in sorted(get_counter().items(),key=lambda x: -x[1]):
         print i[0],":",i[1]
 
 
+def f_37():
+    import matplotlib.pyplot as plt
+    label = []
+    x = []
+    y = []
+    for i,v in enumerate(sorted(get_counter().items(), key=lambda x: -x[1])[:10]):
+        label.append(v[0])
+        x.append(i)
+        y.append(v[1])
+    plt.bar(x,y,align="center",width=0.5)
+    plt.xticks(x,label)
+    plt.xlim(-0.5,9.5)
+    plt.xlabel(u"単語")
+    plt.ylabel(u"出現頻度")
+    plt.show()
+   
 
 def main():
     #f_00()
@@ -624,7 +653,8 @@ def main():
     #f_33()
     #f_34()
     #f_35()
-    f_36()
+    #f_36()
+    f_37()
 
 if __name__ == "__main__":
     main()
