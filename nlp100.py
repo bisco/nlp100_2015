@@ -465,7 +465,8 @@ def f_28():
 def f_29():
     dic = f_27()
     filename = dic[u"国旗画像"]
-    api_url = "http://en.wikipedia.org/w/api.php?action=query&titles=Image:"+filename.replace(" ","%20")+"&prop=imageinfo&iiprop=url&format=json"
+    api_url = "http://en.wikipedia.org/w/api.php?action=query&titles=Image:" \
+                + filename.replace(" ","%20") + "&prop=imageinfo&iiprop=url&format=json"
     
     import urllib2
     resp = urllib2.urlopen(api_url)
@@ -599,8 +600,8 @@ def f_36():
         print i[0],":",i[1]
 
 
+import matplotlib.pyplot as plt
 def f_37():
-    import matplotlib.pyplot as plt
     label = []
     x = []
     y = []
@@ -615,6 +616,44 @@ def f_37():
     plt.ylabel(u"出現頻度")
     plt.show()
    
+
+def f_38(bins=30):
+    import math
+    label = []
+    x = []
+    y = []
+    for i,v in enumerate(sorted(get_counter().items(), key=lambda x: -x[1])):
+        label.append(v[0])
+        x.append(i+1)
+        y.append(v[1])
+
+    plt.xlabel(u"出現頻度")
+    plt.ylabel(u"単語の種類数")
+    plt.title("Histogram")
+    plt.hist(y,bins=bins)
+    plt.show()
+
+
+def f_39():
+    import math
+    label = []
+    x = []
+    y = []
+    for i,v in enumerate(sorted(get_counter().items(), key=lambda x: -x[1])):
+        label.append(v[0])
+        x.append(i+1)
+        y.append(v[1])
+
+    plt.xlim(0.1,10e5)
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.title(u"Zipfの法則")
+    plt.xlabel(u"出現頻度順位")
+    plt.ylabel(u"出現頻度")
+    plt.scatter(x,y)
+    plt.show()
+    
+
 
 def main():
     #f_00()
@@ -654,7 +693,9 @@ def main():
     #f_34()
     #f_35()
     #f_36()
-    f_37()
+    #f_37()
+    #f_38()
+    #f_39()
 
 if __name__ == "__main__":
     main()
