@@ -437,6 +437,10 @@ def remove_link(line):
 def remove_list(line):
     import re
     bare_list = re.sub("^\*+","",line)
+    return bare_list
+
+def remove_countlist(line):
+    import re
     bare_list = re.sub("^#+","",line)
     return bare_list
 
@@ -456,6 +460,7 @@ def f_28():
             i = remove_category(i)
             i = remove_link(i)
             i = remove_list(i)
+            i = remove_countlist(i)
             i = remove_template(i)
             dic[k].append(i)
         print k,
@@ -618,7 +623,6 @@ def f_37():
    
 
 def f_38(bins=30):
-    import math
     label = []
     x = []
     y = []
@@ -635,7 +639,6 @@ def f_38(bins=30):
 
 
 def f_39():
-    import math
     label = []
     x = []
     y = []
@@ -653,6 +656,50 @@ def f_39():
     plt.scatter(x,y)
     plt.show()
     
+
+
+"""
+http://qiita.com/nezuq/items/f481f07fc0576b38e81d より
+1行目
+
+    *
+    文節番号
+    係り先の文節番号(係り先なし:-1)
+    主辞の形態素番号/機能語の形態素番号
+    係り関係のスコア(大きい方が係りやすい)
+
+2行目
+
+    表層形 （Tab区切り）
+    品詞
+    品詞細分類1
+    品詞細分類2
+    品詞細分類3
+    活用形
+    活用型
+    原形
+    読み
+    発音
+"""
+"""
+class Morph():
+    def __init__(self,morph_line):
+        self.surface, morph_elems = morph_line.strip().split("\t")
+        self.morph_elems = morph_elems.split(",")
+
+        self.base = self.morph_elems[6]
+        self.pos = self.morph_elems[0]
+        self.pos1 = self.morph_elems[1]
+
+
+# 1文をChunkオブジェクトのリストとする
+class Chunk():
+    def __init__(self):
+        self.morphs = []
+        self.dst = -1
+        self.srcs = []
+
+"""
 
 
 def main():
