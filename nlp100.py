@@ -681,7 +681,6 @@ http://qiita.com/nezuq/items/f481f07fc0576b38e81d より
     読み
     発音
 """
-"""
 class Morph():
     def __init__(self,morph_line):
         self.surface, morph_elems = morph_line.strip().split("\t")
@@ -691,6 +690,25 @@ class Morph():
         self.pos = self.morph_elems[0]
         self.pos1 = self.morph_elems[1]
 
+    def elem_print(self):
+        print self.base,
+
+def f_40():
+    morph_list = [[]]
+    with open("neko.txt.cabocha","r") as f:
+        for line in f:
+            if line[0] == "*":
+                continue
+            if line.strip() == "EOS":
+                if morph_list[-1] != []:
+                    morph_list.append([])
+                continue
+            morph_list[-1].append(Morph(line))
+
+    # 先頭は章番号なのでスキップする
+    for i in morph_list[3]:
+        i.elem_print()
+    print ""
 
 # 1文をChunkオブジェクトのリストとする
 class Chunk():
@@ -699,7 +717,6 @@ class Chunk():
         self.dst = -1
         self.srcs = []
 
-"""
 
 
 def main():
@@ -743,6 +760,7 @@ def main():
     #f_37()
     #f_38()
     #f_39()
+    f_40()
 
 if __name__ == "__main__":
     main()
