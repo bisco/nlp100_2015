@@ -693,6 +693,15 @@ class Morph():
     def elem_print(self):
         print self.base,
 
+    def get_pos(self):
+        return self.pos
+
+    def get_surface(self):
+        return self.surface
+
+    def get_surface_nomark(self):
+        return self.surface if self.pos != "記号" else ""
+
 def f_40():
     morph_list = [[]]
     with open("neko.txt.cabocha","r") as f:
@@ -711,12 +720,102 @@ def f_40():
     print ""
 
 # 1文をChunkオブジェクトのリストとする
+# chunk = 文節
 class Chunk():
     def __init__(self):
         self.morphs = []
         self.dst = -1
         self.srcs = []
+        self.score = 0
 
+    def set_params(self, param_line):
+        # * 0 5D 0/1 -0.620584
+        #   0: *
+        #   1: 文節番号
+        #   2: 係り先の文節番号(係り先なし:-1)
+        #   3: 主辞の形態素番号/機能語の形態素番号
+        #   4: 係り関係のスコア(大きい方が係りやすい) 
+        params = param_line.strip().split(" ")
+        self.dst = int(params[2][:-1].strip())
+        self.score = float(params[4])
+        
+    def add_morph(self,morph):
+        self.morphs.append(morph)
+
+    def get_dst(self):
+        return self.dst
+
+    def add_srcs(self,src_id):
+        self.srcs.append(src_id)
+
+    def get_srcs(self,src_id):
+        return self.srcs
+
+    def get_morphs_surface_nomark(self):
+        return [i.get_surface_nomark() for i in self.morphs if i.get_surface_nomark() != ""]
+
+    def print_morphs_surface_nomark(self):
+        for i in self.get_morphs_surface_nomark():
+            print i,
+
+    def is_only_mark(self):
+        if self.get_morphs_surface_nomark():
+            return False
+        else:
+            return True
+
+
+    def elem_print(self):
+        print "dst:",self.dst,
+        print "src:",self.srcs,
+        for morph in self.morphs:
+            morph.elem_print()
+        print
+
+
+def make_chunk_lists():
+    def set_dst_chunks(chunk_list):
+        for i,chunk in enumerate(chunk_list):
+            dst = chunk.get_dst()
+            if dst >= 0:
+                chunk_list[dst].add_srcs(i)
+
+    chunk_list = [[]]
+    
+    with open("neko.txt.cabocha","r") as f:
+        for line in f:
+            if line[0] == "*":
+                chunk = Chunk()
+                chunk.set_params(line)
+                chunk_list[-1].append(chunk)
+                continue
+            if line.strip() == "EOS":
+                if chunk_list[-1] != []:
+                    set_dst_chunks(chunk_list[-1])
+                    chunk_list.append([])
+                continue
+            chunk_list[-1][-1].add_morph(Morph(line))
+
+    return chunk_list
+
+def f_41():
+    chunk_lists = make_chunk_lists()
+    for chunk in chunk_lists[8]:
+        chunk.elem_print()
+
+
+def f_42():
+    for chunk_list in make_chunk_lists():
+        for chunk in chunk_list:
+            if chunk.is_only_mark():
+                continue
+            chunk.print_morphs_surface_nomark()
+            print "\t",
+            if chunk.get_dst() != -1:
+                chunk_list[chunk.get_dst()].print_morphs_surface_nomark()
+            else:
+                print "NO_DST"
+            print
 
 
 def main():
@@ -760,7 +859,9 @@ def main():
     #f_37()
     #f_38()
     #f_39()
-    f_40()
+    #f_40()
+    #f_41()
+    f_42()
 
 if __name__ == "__main__":
     main()
