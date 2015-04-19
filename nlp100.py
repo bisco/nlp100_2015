@@ -657,7 +657,9 @@ def f_39():
     plt.show()
     
 
-
+##################
+# Chapter 5.     #
+##################
 """
 http://qiita.com/nezuq/items/f481f07fc0576b38e81d より
 1行目
@@ -699,8 +701,10 @@ class Morph():
     def get_surface(self):
         return self.surface
 
-    def get_surface_nomark(self):
-        return self.surface if self.pos != "記号" else ""
+    def is_noun(self):
+        return  u"名詞" == unicode(self.pos, "utf-8")
+    def is_verb(self):
+        return  u"動詞" == unicode(self.pos, "utf-8")
 
 def f_40():
     morph_list = [[]]
@@ -742,7 +746,7 @@ class Chunk():
     def add_morph(self,morph):
         self.morphs.append(morph)
 
-    def get_dst(self):
+    def get_dst_number(self):
         return self.dst
 
     def add_srcs(self,src_id):
@@ -752,11 +756,7 @@ class Chunk():
         return self.srcs
 
     def get_morphs_surface_nomark(self):
-        return [i.get_surface_nomark() for i in self.morphs if i.get_surface_nomark() != ""]
-
-    def print_morphs_surface_nomark(self):
-        for i in self.get_morphs_surface_nomark():
-            print i,
+        return [i.get_surface() for i in self.morphs if unicode(i.get_pos(), "utf-8") != u"記号"]
 
     def is_only_mark(self):
         if self.get_morphs_surface_nomark():
@@ -764,6 +764,17 @@ class Chunk():
         else:
             return True
 
+    def has_noun(self):
+        for morph in self.morphs:
+            if morph.is_noun():
+                return True
+        return False
+
+    def has_verb(self):
+        for morph in self.morphs:
+            if morph.is_verb():
+                return True
+        return False
 
     def elem_print(self):
         print "dst:",self.dst,
@@ -776,7 +787,7 @@ class Chunk():
 def make_chunk_lists():
     def set_dst_chunks(chunk_list):
         for i,chunk in enumerate(chunk_list):
-            dst = chunk.get_dst()
+            dst = chunk.get_dst_number()
             if dst >= 0:
                 chunk_list[dst].add_srcs(i)
 
@@ -809,13 +820,45 @@ def f_42():
         for chunk in chunk_list:
             if chunk.is_only_mark():
                 continue
-            chunk.print_morphs_surface_nomark()
+            print "".join(chunk.get_morphs_surface_nomark()),
             print "\t",
-            if chunk.get_dst() != -1:
-                chunk_list[chunk.get_dst()].print_morphs_surface_nomark()
+            if chunk.get_dst_number() != -1:
+                print "".join(chunk_list[chunk.get_dst_number()].get_morphs_surface_nomark())
             else:
                 print "NO_DST"
-            print
+
+def f_43():
+    for chunk_list in make_chunk_lists():
+        for chunk in chunk_list:
+            if chunk.is_only_mark():
+                continue
+            if chunk.has_noun() and chunk_list[chunk.get_dst_number()].has_verb():
+                print "".join(chunk.get_morphs_surface_nomark()),
+                print "\t",
+                print "".join(chunk_list[chunk.get_dst_number()].get_morphs_surface_nomark())
+                
+
+def make_node(src,dst):
+    return src + " -> " + dst + ";\n"
+
+def chunks_to_digraph(title,chunks):
+    script = ["digraph " + title.strip().replace(" ","_") + "{ \n"]
+    for chunk in chunks:
+        dst = chunk.get_dst_number()
+        if dst >= 0:
+            script.append(make_node("".join(chunk.get_morphs_surface_nomark()),
+                                    "".join(chunks[dst].get_morphs_surface_nomark())
+                                    ))
+    script.append("}\n")
+    return "".join(script)
+
+def f_44():
+    chunk_lists = make_chunk_lists()
+    chunk_list = chunk_lists[8]
+    script = chunks_to_digraph("section 44",chunk_list)
+
+    import sys
+    sys.stdout.write(script)
 
 
 def main():
@@ -861,7 +904,9 @@ def main():
     #f_39()
     #f_40()
     #f_41()
-    f_42()
+    #f_42()
+    #f_43()
+    f_44()
 
 if __name__ == "__main__":
     main()
