@@ -701,10 +701,18 @@ class Morph():
     def get_surface(self):
         return self.surface
 
+    def get_base(self):
+        return self.base
+
     def is_noun(self):
         return  u"名詞" == unicode(self.pos, "utf-8")
+
     def is_verb(self):
         return  u"動詞" == unicode(self.pos, "utf-8")
+
+    def is_joshi(self):
+        return  u"助詞" == unicode(self.pos, "utf-8")
+
 
 def f_40():
     morph_list = [[]]
@@ -752,7 +760,7 @@ class Chunk():
     def add_srcs(self,src_id):
         self.srcs.append(src_id)
 
-    def get_srcs(self,src_id):
+    def get_srcs(self):
         return self.srcs
 
     def get_morphs_surface_nomark(self):
@@ -775,6 +783,25 @@ class Chunk():
             if morph.is_verb():
                 return True
         return False
+
+    def has_joshi(self):
+        for morph in self.morphs:
+            if morph.is_joshi():
+                return True
+        return False
+
+    def get_joshi(self):
+        for morph in self.morphs:
+            if morph.is_joshi():
+                return morph
+        return False
+
+    def get_verb(self):
+        for morph in self.morphs:
+            if morph.is_verb():
+                return morph
+        return False
+
 
     def elem_print(self):
         print "dst:",self.dst,
@@ -861,6 +888,32 @@ def f_44():
     sys.stdout.write(script)
 
 
+def get_kaku_patterns():
+    kaku_patterns = []
+    for chunk_list in make_chunk_lists():
+        for chunk in chunk_list:
+            if not chunk.has_verb():
+                continue
+            srcs = chunk.get_srcs()
+
+            joshi = []
+            for i in srcs:
+                joshi_cand = chunk_list[i].get_joshi()
+                if joshi_cand:
+                    joshi.append(joshi_cand)
+
+            if not joshi:
+                continue
+
+            kaku_patterns.append((chunk.get_verb(),sorted(joshi)))
+
+    return kaku_patterns           
+
+
+def f_45():
+    for i in get_kaku_patterns():
+        print i[0].get_base()+"\t"+" ".join([j.get_base() for j in i[1]])
+
 def main():
     #f_00()
     #f_01()
@@ -906,7 +959,8 @@ def main():
     #f_41()
     #f_42()
     #f_43()
-    f_44()
+    #f_44()
+    f_45()
 
 if __name__ == "__main__":
     main()
