@@ -897,15 +897,17 @@ def get_kaku_patterns():
             srcs = chunk.get_srcs()
 
             joshi = []
+            chunks = []
             for i in srcs:
                 joshi_cand = chunk_list[i].get_joshi()
                 if joshi_cand:
                     joshi.append(joshi_cand)
+                    chunks.append(chunk_list[i])
 
             if not joshi:
                 continue
 
-            kaku_patterns.append((chunk.get_verb(),sorted(joshi)))
+            kaku_patterns.append((chunk.get_verb(),sorted(joshi),chunks))
 
     return kaku_patterns           
 
@@ -913,6 +915,18 @@ def get_kaku_patterns():
 def f_45():
     for i in get_kaku_patterns():
         print i[0].get_base()+"\t"+" ".join([j.get_base() for j in i[1]])
+
+
+def f_46():
+    morphlist_to_str = lambda x: "".join(x.get_morphs_surface_nomark())
+    for i in get_kaku_patterns():
+        print "".join([
+                        i[0].get_base(),
+                        "\t",
+                        " ".join([j.get_base() for j in i[1]]),
+                        "\t",
+                        "".join([morphlist_to_str(k) for k in i[2]])
+                       ])
 
 def main():
     #f_00()
@@ -960,7 +974,8 @@ def main():
     #f_42()
     #f_43()
     #f_44()
-    f_45()
+    #f_45()
+    f_46()
 
 if __name__ == "__main__":
     main()
