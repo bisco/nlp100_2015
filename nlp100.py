@@ -713,6 +713,12 @@ class Morph():
     def is_joshi(self):
         return  u"助詞" == unicode(self.pos, "utf-8")
 
+    def is_sahen_setsuzoku_noun(self):
+        return  u"名詞" == unicode(self.pos, "utf-8") and \
+                u"サ変接続" == unicode(self.pos1, "utf-8")
+
+    def is_joshi_wo(self):
+        return self.is_joshi() and u"を" == unicode(self.surface, "utf-8")
 
 def f_40():
     morph_list = [[]]
@@ -754,6 +760,9 @@ class Chunk():
     def add_morph(self,morph):
         self.morphs.append(morph)
 
+    def get_morphs(self):
+        return self.morphs
+
     def get_dst_number(self):
         return self.dst
 
@@ -772,35 +781,40 @@ class Chunk():
         else:
             return True
 
-    def has_noun(self):
+    def has_general(self,checker):
         for morph in self.morphs:
-            if morph.is_noun():
+            if checker(morph):
                 return True
         return False
+
+    def has_noun(self):
+        return self.has_general(lambda x:x.is_noun())
 
     def has_verb(self):
-        for morph in self.morphs:
-            if morph.is_verb():
-                return True
-        return False
+        return self.has_general(lambda x:x.is_verb())
 
     def has_joshi(self):
-        for morph in self.morphs:
-            if morph.is_joshi():
-                return True
-        return False
+        return self.has_general(lambda x:x.is_joshi())
+
+    def has_sahen_setsuzoku_noun(self):
+        return self.has_general(lambda x:x.is_sahen_setsuzoku_noun())
+
+    def has_joshi_wo(self):
+        return self.has_general(lambda x:x.is_joshi_wo())
 
     def get_joshi(self):
+        joshi_list = []
         for morph in self.morphs:
             if morph.is_joshi():
-                return morph
-        return False
+                joshi_list.append(morph)
+        return joshi_list
 
     def get_verb(self):
+        verb_list = []
         for morph in self.morphs:
             if morph.is_verb():
-                return morph
-        return False
+                verb_list.append(morph)
+        return verb_list
 
 
     def elem_print(self):
@@ -888,6 +902,8 @@ def f_44():
     sys.stdout.write(script)
 
 
+# get_kaku_pattern => (動詞のリスト: [class Morph], 助詞のリスト: [class Morph], 動詞のかかり元:[class Chunk])
+# 動詞も助詞も複数あるパターンがある(複合辞をぶった切るから？)
 def get_kaku_patterns():
     kaku_patterns = []
     for chunk_list in make_chunk_lists():
@@ -900,33 +916,71 @@ def get_kaku_patterns():
             chunks = []
             for i in srcs:
                 joshi_cand = chunk_list[i].get_joshi()
+                for j in joshi_cand:
+                    joshi.append(j)
                 if joshi_cand:
-                    joshi.append(joshi_cand)
                     chunks.append(chunk_list[i])
 
             if not joshi:
                 continue
 
             kaku_patterns.append((chunk.get_verb(),sorted(joshi),chunks))
-
     return kaku_patterns           
 
 
 def f_45():
     for i in get_kaku_patterns():
-        print i[0].get_base()+"\t"+" ".join([j.get_base() for j in i[1]])
+        print i[0][0].get_base()+"\t"+" ".join([j.get_base() for j in i[1]])
 
+
+def chunks_to_str(ck):
+    return "".join(ck.get_morphs_surface_nomark())
 
 def f_46():
-    morphlist_to_str = lambda x: "".join(x.get_morphs_surface_nomark())
     for i in get_kaku_patterns():
         print "".join([
-                        i[0].get_base(),
+                        i[0][0].get_base(),
                         "\t",
                         " ".join([j.get_base() for j in i[1]]),
                         "\t",
-                        "".join([morphlist_to_str(k) for k in i[2]])
+                        "".join([chunks_to_str(k) for k in i[2]])
                        ])
+
+
+# get_kaku_pattern => (動詞のリスト: [class Morph], 助詞のリスト: [class Morph], 動詞のかかり元:[class Chunk])
+# 簡単のため、動詞に直接係るもののみ扱う(サ変接続名詞+を格の文節に係るものは考えない)
+def f_47():
+    lastjoshi_to_str = lambda x: x.get_joshi()[-1].get_surface()
+    jutsugo_and_chunks = []
+    for kaku_patterns in get_kaku_patterns():
+        morph_verbs = kaku_patterns[0]
+        chunk_srcs = kaku_patterns[2]
+
+        jutsugo = [morph_verbs[0].get_base()]
+        chunks = []
+        NO_JUTSUGO = True
+        for ck in chunk_srcs:
+            if NO_JUTSUGO and ck.has_sahen_setsuzoku_noun() and ck.has_joshi_wo():
+                #述語は複数ないものとする  
+                jutsugo = [i.get_base() for i in ck.get_morphs()] + jutsugo
+                NO_JUTSUGO = False
+            else:
+                chunks.append(ck)
+        jutsugo_and_chunks.append((jutsugo,sorted(chunks,key=lastjoshi_to_str)))  
+
+    for i in jutsugo_and_chunks:
+        print "".join([
+                        "".join(i[0]),
+                        "\t",
+                        " ".join([lastjoshi_to_str(j) for j in i[1]]),
+                        "\t",
+                        " ".join([chunks_to_str(k) for k in i[1]])
+                      ])
+                        
+
+            
+        
+
 
 def main():
     #f_00()
@@ -975,7 +1029,8 @@ def main():
     #f_43()
     #f_44()
     #f_45()
-    f_46()
+    #f_46()
+    f_47()
 
 if __name__ == "__main__":
     main()
