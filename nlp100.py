@@ -948,7 +948,16 @@ def f_46():
 
 
 # get_kaku_pattern => (動詞のリスト: [class Morph], 助詞のリスト: [class Morph], 動詞のかかり元:[class Chunk])
-# 簡単のため、動詞に直接係るもののみ扱う(サ変接続名詞+を格の文節に係るものは考えない)
+#
+# 参考資料：http://pj.ninjal.ac.jp/corpus_center/csj/manu-f/bunsetsu.pdf
+# (辞書の問題か、cabochaの使い方の問題だと思うが)
+# cabochaでは複合辞をうまく扱えないので、
+# 以下のとおり勝手に条件を付ける(自然言語処理的に正しいのだろうか？)
+# ・Chunkを構成する助詞が複数ある場合、最後に出現した助詞をChunkの助詞とする
+# ・出現順が最後ではない助詞は、複合辞を構成するものとして、助詞扱いしない
+#
+# また、簡単のため、動詞に直接係るもののみ扱う(サ変接続名詞+を格の文節に係るものは考えない)
+#
 def f_47():
     lastjoshi_to_str = lambda x: x.get_joshi()[-1].get_surface()
     jutsugo_and_chunks = []
@@ -979,8 +988,52 @@ def f_47():
                         
 
             
-        
+def f_48():       
+    for chunk_list in make_chunk_lists():
+        for chunk in chunk_list:
+            if not chunk.has_noun():
+                continue
+            dst = chunk.get_dst_number()
+            chunk_root = []
+            while dst != -1:
+                chunk_root.append(chunk_list[dst])
+                dst = chunk_list[dst].get_dst_number()
+            if chunk_root:
+                print " -> ".join([chunks_to_str(chunk)," -> ".join([chunks_to_str(i) for i in chunk_root])])
+        print
 
+
+
+"""
+def get_kakari_path(chunk_list,idx):
+    chunk = chunk_list[idx]
+    dst = chunk.get_dst_number()
+    chunk_path = []
+    while dst != -1:
+        chunk_path.append(dst)
+        dst = chunk_list[dst].get_dst_number()
+    return chunk_path
+
+
+# merge_kakari_path => [[文節i->jまでのpath],[文節j->kまでのpath],[文節iとjの共通部分]]
+def merge_kakari_path(x_path,y_path):
+    x_and_y = set(x_path) & set(y_path)
+    if not list(x_and_y):
+        return []
+    
+# 名詞句の定義をしてから
+def f_49():
+    for chunk_list in make_chunk_lists():
+        list_len = len(chunk_list)
+        for i in range(list_len):
+            for j in range(list_len-(i+1)):
+                if not (chunk_list[i].has_noun() and chunk_list[j].has_noun()):
+                    continue
+                
+                chunk_X_path = get_kakari_path(chunk_list,i)
+                chunk_Y_path = get_kakari_path(chunk_list,j)
+                merged_path = merge_kakari_path(chunk_X_path,chunk_Y_path)
+"""
 
 def main():
     #f_00()
@@ -1030,7 +1083,8 @@ def main():
     #f_44()
     #f_45()
     #f_46()
-    f_47()
+    #f_47()
+    #f_48()
 
 if __name__ == "__main__":
     main()
