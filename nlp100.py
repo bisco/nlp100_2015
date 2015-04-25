@@ -822,9 +822,11 @@ class Chunk():
 
     def get_bases_conv_first_noun(self,conv):
         str_list = []
+        first = True
         for morph in self.morphs:
-            if morph.is_noun():
+            if first and morph.is_noun():
                 str_list.append(conv) 
+                first = False
             else:
                 str_list.append(morph.get_base())
         return str_list
@@ -1082,21 +1084,33 @@ def f_49():
             path_x_diff = dic["path_x_diff"]
             path_y_diff = dic["path_y_diff"]
             intersect = dic["intersection"]
+        
+            if path_x_diff[1:]:
+                print " -> ".join([
+                                    "".join(path_x_diff[0].get_bases_conv_first_noun("X")),
+                                    " -> ".join([chunk_to_str(chunk) for chunk in path_x_diff[1:]])
+                                  ]),
+            else:
+                print " -> ".join([
+                                    "".join(path_x_diff[0].get_bases_conv_first_noun("X")),
+                                  ]),
 
-            print " -> ".join([
-                                "".join(path_x_diff[0].get_bases_conv_first_noun("X")),
-                                " -> ".join([chunk_to_str(chunk) for chunk in path_x_diff[1:]])
-                              ]),
             # path_y が path_x のサブセット
             #   => path_y_diff == [] 
             if not path_y_diff:
                 print "-> Y"
             else:
                 print "|",
-                print " -> ".join([
-                                    "".join(path_y_diff[0].get_bases_conv_first_noun("Y")),
-                                    " -> ".join([chunk_to_str(chunk) for chunk in path_y_diff[1:]])
-                                  ]),
+                if path_y_diff[1:]:
+                    print " -> ".join([
+                                        "".join(path_y_diff[0].get_bases_conv_first_noun("Y")),
+                                        " -> ".join([chunk_to_str(chunk) for chunk in path_y_diff[1:]])
+                                      ]),
+                else:
+                    print " -> ".join([
+                                        "".join(path_y_diff[0].get_bases_conv_first_noun("Y")),
+                                      ]),
+
                 print "|", 
                 print " -> ".join([chunk_to_str(chunk) for chunk in intersect])
         print
