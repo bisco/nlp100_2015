@@ -741,6 +741,7 @@ def f_40():
 # chunk = 文節
 class Chunk():
     def __init__(self):
+        self.chunk_idx = -1
         self.morphs = []
         self.dst = -1
         self.srcs = []
@@ -756,6 +757,7 @@ class Chunk():
         params = param_line.strip().split(" ")
         self.dst = int(params[2][:-1].strip())
         self.score = float(params[4])
+        self.chunk_idx = int(params[1])
         
     def add_morph(self,morph):
         self.morphs.append(morph)
@@ -772,6 +774,9 @@ class Chunk():
     def get_srcs(self):
         return self.srcs
 
+    def get_chunk_idx(self):
+        return self.chunk_idx
+
     def get_morphs_surface_nomark(self):
         return [i.get_surface() for i in self.morphs if unicode(i.get_pos(), "utf-8") != u"記号"]
 
@@ -781,41 +786,48 @@ class Chunk():
         else:
             return True
 
-    def has_general(self,checker):
+    def has_generic(self,checker):
         for morph in self.morphs:
             if checker(morph):
                 return True
         return False
 
     def has_noun(self):
-        return self.has_general(lambda x:x.is_noun())
+        return self.has_generic(lambda x:x.is_noun())
 
     def has_verb(self):
-        return self.has_general(lambda x:x.is_verb())
+        return self.has_generic(lambda x:x.is_verb())
 
     def has_joshi(self):
-        return self.has_general(lambda x:x.is_joshi())
+        return self.has_generic(lambda x:x.is_joshi())
 
     def has_sahen_setsuzoku_noun(self):
-        return self.has_general(lambda x:x.is_sahen_setsuzoku_noun())
+        return self.has_generic(lambda x:x.is_sahen_setsuzoku_noun())
 
     def has_joshi_wo(self):
-        return self.has_general(lambda x:x.is_joshi_wo())
+        return self.has_generic(lambda x:x.is_joshi_wo())
+
+    def get_morphs_generic(self,checker):
+        morph_list = []
+        for morph in self.morphs:
+            if checker(morph):
+                morph_list.append(morph)
+        return morph_list
 
     def get_joshi(self):
-        joshi_list = []
-        for morph in self.morphs:
-            if morph.is_joshi():
-                joshi_list.append(morph)
-        return joshi_list
+        return self.get_morphs_generic(lambda x:x.is_joshi())
 
     def get_verb(self):
-        verb_list = []
-        for morph in self.morphs:
-            if morph.is_verb():
-                verb_list.append(morph)
-        return verb_list
+        return self.get_morphs_generic(lambda x:x.is_verb())
 
+    def get_bases_conv_first_noun(self,conv):
+        str_list = []
+        for morph in self.morphs:
+            if morph.is_noun():
+                str_list.append(conv) 
+            else:
+                str_list.append(morph.get_base())
+        return str_list
 
     def elem_print(self):
         print "dst:",self.dst,
@@ -933,7 +945,7 @@ def f_45():
         print i[0][0].get_base()+"\t"+" ".join([j.get_base() for j in i[1]])
 
 
-def chunks_to_str(ck):
+def chunk_to_str(ck):
     return "".join(ck.get_morphs_surface_nomark())
 
 def f_46():
@@ -943,7 +955,7 @@ def f_46():
                         "\t",
                         " ".join([j.get_base() for j in i[1]]),
                         "\t",
-                        "".join([chunks_to_str(k) for k in i[2]])
+                        "".join([chunk_to_str(k) for k in i[2]])
                        ])
 
 
@@ -983,13 +995,17 @@ def f_47():
                         "\t",
                         " ".join([lastjoshi_to_str(j) for j in i[1]]),
                         "\t",
-                        " ".join([chunks_to_str(k) for k in i[1]])
+                        " ".join([chunk_to_str(k) for k in i[1]])
                       ])
                         
 
-            
-def f_48():       
+ 
+# get_all_kakari_path => [ [chunk内のpathリスト], [chunk内のpathリスト], ... ,]
+# chunk内のpathリスト => [ [chunk,chunk,chunk, ... ,], [chunk,chunk,chunk, ... ,], ... ,]
+def get_all_kakari_path_list():
+    kakari_path = []
     for chunk_list in make_chunk_lists():
+        kakari_path.append([])
         for chunk in chunk_list:
             if not chunk.has_noun():
                 continue
@@ -998,42 +1014,95 @@ def f_48():
             while dst != -1:
                 chunk_root.append(chunk_list[dst])
                 dst = chunk_list[dst].get_dst_number()
+
             if chunk_root:
-                print " -> ".join([chunks_to_str(chunk)," -> ".join([chunks_to_str(i) for i in chunk_root])])
+                chunk_root.insert(0,chunk)
+                kakari_path[-1].append(chunk_root)
+
+    return kakari_path
+
+
+def f_48():       
+    for kakari_path_list in get_all_kakari_path_list():
+        for kakari_path in kakari_path_list:
+            print " -> ".join([chunk_to_str(chunk) for chunk in kakari_path])
         print
 
 
-
-"""
-def get_kakari_path(chunk_list,idx):
-    chunk = chunk_list[idx]
-    dst = chunk.get_dst_number()
-    chunk_path = []
-    while dst != -1:
-        chunk_path.append(dst)
-        dst = chunk_list[dst].get_dst_number()
-    return chunk_path
-
-
-# merge_kakari_path => [[文節i->jまでのpath],[文節j->kまでのpath],[文節iとjの共通部分]]
-def merge_kakari_path(x_path,y_path):
-    x_and_y = set(x_path) & set(y_path)
-    if not list(x_and_y):
-        return []
-    
-# 名詞句の定義をしてから
+   
+# 名詞のみを置き換えていたり、名詞+助詞を置き換えていたりでルールがよくわからないので、
+# 出力例から勝手に類推する。
+# 
+# [出力例]
+# Xは | Yで -> 始めて -> 人間という -> ものを | 見た
+# Xは | Yという -> ものを | 見た
+# Xは | Yを | 見た
+# Xで -> 始めて -> Y
+# Xで -> 始めて -> 人間という -> Y
+# Xという -> Y
+# 
+# ルール1：係り受けパスの先頭の文節については、置き換え対象を名詞とする。
+#          => 文節 i については、最初に出現した名詞を含む文節の名詞を
+#             X と置き換える。
+#             文節 j については、文節 j からスタートする係り受けパスが、
+#             文節 i からスタートする係り受けパスのサブセットでない場合は、
+#             最初に出現した名詞を含む文節の名詞を Y と置き換える。
+#
+# ルール2：係り受けパスの先頭でない文節については、置き換え対象を分節全体とする。
+#          => 文節 j が、文節 i からスタートする係り受けパスのサブセットの場合は、
+#             最初に出現した名詞を含む文節全てをYと置き換える。
+#
+# ルール3: (多分ないと思うが) 共通部分を持たない2つのパスに関しては、処理対象としない
+# 
 def f_49():
-    for chunk_list in make_chunk_lists():
-        list_len = len(chunk_list)
-        for i in range(list_len):
-            for j in range(list_len-(i+1)):
-                if not (chunk_list[i].has_noun() and chunk_list[j].has_noun()):
-                    continue
+    import itertools
+    def intersection_kakari_path(path_x, path_y):
+        return list(set(path_x) & set(path_y))
+
+    def diff_kakari_path(path_x, path_y):
+        return list(set(path_x) - set(path_y))
+    
+    noun_phrases_paths = []
+    for kakari_path_list in get_all_kakari_path_list():
+        noun_phrases_paths.append([])
+        for path_x, path_y in itertools.combinations(kakari_path_list,2):
+            intersect = intersection_kakari_path(path_x, path_y)
+            if not intersect:
+                continue
+            path_x_diff = diff_kakari_path(path_x, intersect)
+            path_y_diff = diff_kakari_path(path_y, intersect)
+            
+            noun_phrases_paths[-1].append({"path_x_diff": path_x_diff, 
+                                           "intersection": intersect, 
+                                           "path_y_diff": path_y_diff,
+                                           })
+
+    for dics in noun_phrases_paths:
+        for dic in dics:
+            path_x_diff = dic["path_x_diff"]
+            path_y_diff = dic["path_y_diff"]
+            intersect = dic["intersection"]
+
+            print " -> ".join([
+                                "".join(path_x_diff[0].get_bases_conv_first_noun("X")),
+                                " -> ".join([chunk_to_str(chunk) for chunk in path_x_diff[1:]])
+                              ]),
+            # path_y が path_x のサブセット
+            #   => path_y_diff == [] 
+            if not path_y_diff:
+                print "-> Y"
+            else:
+                print "|",
+                print " -> ".join([
+                                    "".join(path_y_diff[0].get_bases_conv_first_noun("Y")),
+                                    " -> ".join([chunk_to_str(chunk) for chunk in path_y_diff[1:]])
+                                  ]),
+                print "|", 
+                print " -> ".join([chunk_to_str(chunk) for chunk in intersect])
+        print
+
+
                 
-                chunk_X_path = get_kakari_path(chunk_list,i)
-                chunk_Y_path = get_kakari_path(chunk_list,j)
-                merged_path = merge_kakari_path(chunk_X_path,chunk_Y_path)
-"""
 
 def main():
     #f_00()
@@ -1085,6 +1154,7 @@ def main():
     #f_46()
     #f_47()
     #f_48()
+    f_49()
 
 if __name__ == "__main__":
     main()
