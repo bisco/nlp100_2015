@@ -713,6 +713,12 @@ class Morph():
     def is_joshi(self):
         return  u"助詞" == unicode(self.pos, "utf-8")
 
+    def is_mark(self):
+        return  u"記号" == unicode(self.pos, "utf-8")
+
+    def is_settoushi(self):
+        return  u"接頭詞" == unicode(self.pos, "utf-8")
+
     def is_sahen_setsuzoku_noun(self):
         return  u"名詞" == unicode(self.pos, "utf-8") and \
                 u"サ変接続" == unicode(self.pos1, "utf-8")
@@ -820,15 +826,29 @@ class Chunk():
     def get_verb(self):
         return self.get_morphs_generic(lambda x:x.is_verb())
 
-    def get_bases_conv_first_noun(self,conv):
+    def get_surface_conv_nounchunk(self,conv):
         str_list = []
+        prev = []
         first = True
         for morph in self.morphs:
+            if morph.is_settoushi():
+                prev.append(morph)
+                continue
             if first and morph.is_noun():
-                str_list.append(conv) 
+                prev.append(morph)
                 first = False
             else:
-                str_list.append(morph.get_base())
+                if morph.is_noun() and len(prev) >= 1 and (prev[-1].is_settoushi() or prev[-1].is_noun()):
+                    prev.append(morph)
+                    continue
+                elif morph.is_mark():
+                    continue
+                if len(prev) >= 1:
+                    str_list.append(conv)
+                    prev = []
+                str_list.append(morph.get_surface())
+        if len(str_list) == 0 and len(prev) > 0:
+            str_list.append(conv)
         return str_list
 
     def elem_print(self):
@@ -1059,10 +1079,10 @@ def f_48():
 def f_49():
     import itertools
     def intersection_kakari_path(path_x, path_y):
-        return list(set(path_x) & set(path_y))
+        return sorted(list(set(path_x) & set(path_y)),key=lambda x:x.get_chunk_idx())
 
     def diff_kakari_path(path_x, path_y):
-        return list(set(path_x) - set(path_y))
+        return sorted(list(set(path_x) - set(path_y)),key=lambda x:x.get_chunk_idx())
     
     noun_phrases_paths = []
     for kakari_path_list in get_all_kakari_path_list():
@@ -1087,12 +1107,12 @@ def f_49():
         
             if path_x_diff[1:]:
                 print " -> ".join([
-                                    "".join(path_x_diff[0].get_bases_conv_first_noun("X")),
+                                    "".join(path_x_diff[0].get_surface_conv_nounchunk("X")),
                                     " -> ".join([chunk_to_str(chunk) for chunk in path_x_diff[1:]])
                                   ]),
             else:
                 print " -> ".join([
-                                    "".join(path_x_diff[0].get_bases_conv_first_noun("X")),
+                                    "".join(path_x_diff[0].get_surface_conv_nounchunk("X")),
                                   ]),
 
             # path_y が path_x のサブセット
@@ -1103,14 +1123,13 @@ def f_49():
                 print "|",
                 if path_y_diff[1:]:
                     print " -> ".join([
-                                        "".join(path_y_diff[0].get_bases_conv_first_noun("Y")),
+                                        "".join(path_y_diff[0].get_surface_conv_nounchunk("Y")),
                                         " -> ".join([chunk_to_str(chunk) for chunk in path_y_diff[1:]])
                                       ]),
                 else:
                     print " -> ".join([
-                                        "".join(path_y_diff[0].get_bases_conv_first_noun("Y")),
+                                        "".join(path_y_diff[0].get_surface_conv_nounchunk("Y")),
                                       ]),
-
                 print "|", 
                 print " -> ".join([chunk_to_str(chunk) for chunk in intersect])
         print
