@@ -1174,8 +1174,7 @@ def separate_sentenses():
 
 
 def f_50():
-    for i in separate_sentenses():
-        print i
+    print "\n".join([i for i in separate_sentenses()])
 
 
 def make_word_list():
@@ -1190,8 +1189,7 @@ def make_word_list():
 
 
 def f_51():
-    for word in make_word_list():
-        print word
+    print "\n".join([word for word in make_word_list()])
 
 
 def main():
