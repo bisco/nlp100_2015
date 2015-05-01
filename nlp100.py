@@ -1135,7 +1135,64 @@ def f_49():
         print
 
 
-                
+##################
+# Chapter 5.     #
+##################
+def separate_sentenses():
+    def line_has_separator(line):
+        if "." in line or ";" in line or ":" in line or "?" in line or "!" in line:
+            return True
+        else:
+            return False
+
+    def is_separator(line,char,i):
+        separator = set([".",";",":","?","!"])
+        if not (char in separator):
+            return False
+        # 行の末尾？
+        if (len(line)-1) == i:
+            return True
+        if line[i+1]==" " and line[i+2].isupper():
+            return True
+        return False
+
+    sentences = []
+    with open("nlp.txt","r") as f:
+        sentenses = []
+        for _line in f:
+            if not line_has_separator(_line):
+                # タイトル行をスキップする
+                continue
+            line = _line.strip()
+            sentense = []
+            for i,char in enumerate(line):
+                sentense.append(char)
+                if is_separator(line,char,i):
+                    sentenses.append("".join(sentense))
+                    sentense = []
+    return sentenses
+
+
+def f_50():
+    for i in separate_sentenses():
+        print i
+
+
+def make_word_list():
+    def replace_separator(sentense,char):
+        separator = [".",";",":","?","!"]
+        new_sentense = sentense
+        for i in separator:
+            new_sentense = new_sentense.replace(i,char)
+        return new_sentense
+
+    return [word for sentense in separate_sentenses() for word in replace_separator(sentense," ").split(" ")]
+
+
+def f_51():
+    for word in make_word_list():
+        print word
+
 
 def main():
     #f_00()
@@ -1187,7 +1244,9 @@ def main():
     #f_46()
     #f_47()
     #f_48()
-    f_49()
+    #f_49()
+    #f_50()
+    f_51()
 
 if __name__ == "__main__":
     main()
