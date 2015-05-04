@@ -1166,10 +1166,11 @@ def separate_sentenses():
             line = _line.strip()
             sentense = []
             for i,char in enumerate(line):
-                sentense.append(char)
                 if is_separator(line,char,i):
                     sentenses.append("".join(sentense))
                     sentense = []
+                    continue
+                sentense.append(char)
     return sentenses
 
 
@@ -1178,18 +1179,23 @@ def f_50():
 
 
 def make_word_list():
-    def replace_separator(sentense,char):
-        separator = [".",";",":","?","!"]
+    def replace_punct_marks(sentense,char):
+        marks = [",","(",")","[","]","{","}",'"']
         new_sentense = sentense
-        for i in separator:
+        for i in marks:
             new_sentense = new_sentense.replace(i,char)
         return new_sentense
 
-    return [word for sentense in separate_sentenses() for word in replace_separator(sentense," ").split(" ")]
+    return [word for sentense in separate_sentenses() for word in replace_punct_marks(sentense,"").split(" ")]
 
 
 def f_51():
     print "\n".join([word for word in make_word_list()])
+
+
+def f_52():
+    from stemming.porter2 import stem
+    print "\n".join([word+"\t"+stem(word) for word in make_word_list()])
 
 
 def main():
@@ -1244,7 +1250,8 @@ def main():
     #f_48()
     #f_49()
     #f_50()
-    f_51()
+    #f_51()
+    f_52()
 
 if __name__ == "__main__":
     main()
