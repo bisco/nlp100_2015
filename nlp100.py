@@ -1198,6 +1198,29 @@ def f_52():
     print "\n".join([word+"\t"+stem(word) for word in make_word_list()])
 
 
+def get_parsed_xml():
+    import BeautifulSoup
+    xml = "\n".join(open("nlp.txt.xml","r").readlines())
+    return BeautifulSoup.BeautifulSoup(xml)
+
+def f_53():
+    for i in get_parsed_xml().findAll("word"):
+        print i.string
+
+
+def f_54():
+    for tag in get_parsed_xml().findAll("token"):
+        print "\t".join([tag.word.string,
+                         tag.lemma.string,
+                         tag.pos.string
+                        ])
+
+def f_55():
+    for tag in get_parsed_xml().findAll("token"):
+        if tag.ner.string == "PERSON":
+            print tag.word.string
+
+
 def main():
     #f_00()
     #f_01()
@@ -1251,7 +1274,10 @@ def main():
     #f_49()
     #f_50()
     #f_51()
-    f_52()
+    #f_52()
+    #f_53()
+    #f_54()
+    f_55()
 
 if __name__ == "__main__":
     main()
