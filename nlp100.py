@@ -1138,7 +1138,7 @@ def f_49():
 ##################
 # Chapter 5.     #
 ##################
-def separate_sentenses():
+def separate_sentences():
     def line_has_separator(line):
         if "." in line or ";" in line or ":" in line or "?" in line or "!" in line:
             return True
@@ -1158,35 +1158,35 @@ def separate_sentenses():
 
     sentences = []
     with open("nlp.txt","r") as f:
-        sentenses = []
+        sentences = []
         for _line in f:
             if not line_has_separator(_line):
                 # タイトル行をスキップする
                 continue
             line = _line.strip()
-            sentense = []
+            sentence = []
             for i,char in enumerate(line):
                 if is_separator(line,char,i):
-                    sentenses.append("".join(sentense))
-                    sentense = []
+                    sentences.append("".join(sentence))
+                    sentence = []
                     continue
-                sentense.append(char)
-    return sentenses
+                sentence.append(char)
+    return sentences
 
 
 def f_50():
-    print "\n".join([i for i in separate_sentenses()])
+    print "\n".join([i for i in separate_sentences()])
 
 
 def make_word_list():
-    def replace_punct_marks(sentense,char):
+    def replace_punct_marks(sentence,char):
         marks = [",","(",")","[","]","{","}",'"']
-        new_sentense = sentense
+        new_sentence = sentence
         for i in marks:
-            new_sentense = new_sentense.replace(i,char)
-        return new_sentense
+            new_sentence = new_sentence.replace(i,char)
+        return new_sentence
 
-    return [word for sentense in separate_sentenses() for word in replace_punct_marks(sentense,"").split(" ")]
+    return [word for sentence in separate_sentences() for word in replace_punct_marks(sentence,"").split(" ")]
 
 
 def f_51():
@@ -1219,6 +1219,60 @@ def f_55():
     for tag in get_parsed_xml().findAll("token"):
         if tag.ner.string == "PERSON":
             print tag.word.string
+
+
+class Coref:
+    def __init__(self,text,sentence_id,start,end,head,rep):
+        self.text = text
+        self.sentence_id = sentence_id
+        self.start = start
+        self.end = end
+        self.head = head
+        self.rep = rep
+
+    def get_end(self):
+        return self.end
+
+    def get_rep(self):
+        return self.rep
+
+def f_56():
+    coref = {}
+    xml = get_parsed_xml()
+    for tag in xml.findAll("mention"):
+        if tag.get("representative") == "true":
+            rep = tag.find("text").string
+        else:
+            sentence_id = int(tag.sentence.string)
+            if sentence_id not in coref.keys():
+                coref[sentence_id] = []
+
+            coref[sentence_id].append(
+                        Coref(tag.find("text").string,
+                            int(tag.sentence.string),
+                            int(tag.start.string),
+                            int(tag.end.string),
+                            int(tag.head.string),
+                            rep)
+                        )
+
+    for tag in xml.findAll("sentences")[0].findAll("sentence"):
+        if int(tag.get("id")) in coref.keys():
+            coref_list = sorted(coref[int(tag.get("id"))],key=lambda x:x.get_end())
+            cur_id = coref_list[0].get_end()
+            tmp = []
+            for i in tag.findAll("token"):
+                tmp.append(i.word.string)
+                if int(i.get("id"))+1 == cur_id:
+                    tmp.append("".join(["(",coref_list[0].get_rep(),")"]))
+                    del(coref_list[0])
+                    if coref_list:
+                        cur_id = coref_list[0].get_end()
+                    else:
+                        cur_id = -1
+        else:
+            tmp = [i.word.string for i in tag.findAll("token")]
+        print " ".join(tmp)
 
 
 def main():
@@ -1277,7 +1331,8 @@ def main():
     #f_52()
     #f_53()
     #f_54()
-    f_55()
+    #f_55()
+    f_56()
 
 if __name__ == "__main__":
     main()
