@@ -914,7 +914,7 @@ def f_43():
                 
 
 def make_node(src,dst):
-    return src + " -> " + dst + ";\n"
+    return '"%s" -> "%s";'%(src,dst)
 
 def chunks_to_digraph(title,chunks):
     script = ["digraph " + title.strip().replace(" ","_") + "{ \n"]
@@ -922,7 +922,7 @@ def chunks_to_digraph(title,chunks):
         dst = chunk.get_dst_number()
         if dst >= 0:
             script.append(make_node("".join(chunk.get_morphs_surface_nomark()),
-                                    "".join(chunks[dst].get_morphs_surface_nomark())
+                                    "".join(chunks[dst].get_morphs_surface_nomark())+"\n"
                                     ))
     script.append("}\n")
     return "".join(script)
@@ -1275,6 +1275,31 @@ def f_56():
         print " ".join(tmp)
 
 
+def get_digraph_header(title=""):
+    return "digraph %s {\n"%title
+
+def make_node_with_label(src,dst,label):
+    return '"%s" -> "%s" [label = "%s"];'%(src, dst, label)
+
+def f_57():
+    xml = get_parsed_xml()
+    colp_deps = [i for i in xml.findAll("dependencies") if i.get("type") == "collapsed-dependencies"]
+    graphs = []
+    for deps in colp_deps:
+        graphs.append([(dep.governor.string,
+                        dep.dependent.string,
+                        dep.get("type")) for dep in deps.findAll("dep")])
+            
+    for i,graph in enumerate(graphs):
+        if not graph:
+            continue
+        filename = "f_57_"+str(i)+".dot"
+        f = open(filename,"w")
+        f.write(get_digraph_header(filename.replace(".dot","")))
+        f.write("\n".join([make_node_with_label(*i) for i in graph]))
+        f.write("\n}")
+
+
 def main():
     #f_00()
     #f_01()
@@ -1332,7 +1357,8 @@ def main():
     #f_53()
     #f_54()
     #f_55()
-    f_56()
+    #f_56()
+    f_57()
 
 if __name__ == "__main__":
     main()
