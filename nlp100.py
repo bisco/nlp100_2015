@@ -1300,6 +1300,30 @@ def f_57():
         f.write("\n}")
 
 
+def f_58():
+    xml = get_parsed_xml()
+    colp_deps = [i for i in xml.findAll("dependencies") if i.get("type") == "collapsed-dependencies"]
+    n_p_o = []
+    for deps in colp_deps:
+        deplist = [(dep.governor.string,
+                    dep.dependent.string,
+                    dep.get("type")) for dep in deps.findAll("dep")]
+        n_p_o.append({})
+        for i in deplist:
+            if i[2] == "nsubj" or i[2] == "dobj":
+                if i[0] not in n_p_o[-1].keys():
+                    n_p_o[-1][i[0]] = {}
+                n_p_o[-1][i[0]][i[2]] = i[1]
+
+        for k,v in n_p_o[-1].items():
+            if len(v.keys()) == 1:
+                del(n_p_o[-1][k])
+
+    for dic in n_p_o:
+        for p,v in dic.items():
+            print v["nsubj"],"\t",p,"\t",v["dobj"]
+
+
 def main():
     #f_00()
     #f_01()
@@ -1358,7 +1382,8 @@ def main():
     #f_54()
     #f_55()
     #f_56()
-    f_57()
+    #f_57()
+    f_58()
 
 if __name__ == "__main__":
     main()
