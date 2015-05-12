@@ -1324,6 +1324,39 @@ def f_58():
             print v["nsubj"],"\t",p,"\t",v["dobj"]
 
 
+def f_59():
+    xml = get_parsed_xml()
+    S_exps = [i.string for i in xml.findAll("parse")]
+    for S_exp in S_exps:
+        #print S_exp
+        tmp = []
+        s_type = []
+        NP_count = 0
+        for c in S_exp:
+            if c == "(":
+                pass
+            elif c == ")":
+                if len(tmp) == 1 and tmp[-1] == ")":
+                    pass
+                elif NP_count and tmp:
+                    print "".join(tmp),
+                if s_type.pop() == "NP":
+                    NP_count -= 1
+                    if NP_count == 0:
+                        print
+                tmp = []
+            elif c == " ":
+                if tmp[-1] == "(" or tmp[-1] == ")" or tmp[-1] == "":
+                    continue
+                else:
+                    s_type.append("".join(tmp).strip().replace("(","").replace(")",""))
+                    if s_type[-1] == "NP":
+                        NP_count += 1
+                    tmp = []
+                continue
+            tmp.append(c)
+        print ""
+
 def main():
     #f_00()
     #f_01()
@@ -1383,7 +1416,8 @@ def main():
     #f_55()
     #f_56()
     #f_57()
-    f_58()
+    #f_58()
+    f_59()
 
 if __name__ == "__main__":
     main()
