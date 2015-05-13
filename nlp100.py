@@ -1357,6 +1357,65 @@ def f_59():
             tmp.append(c)
         print ""
 
+
+##################
+# Chapter 7.     #
+##################
+def start_redis():
+    import redis
+    return redis.StrictRedis("localhost",port=6379,db=0)
+
+def f_60():
+    import json
+    r = start_redis()
+    with open("artist.json","r") as f:
+        for i in f:
+            json_obj = json.loads(i)
+            name = json_obj["name"]
+            if "area" not in json_obj.keys():
+                area = "NO_AREA"
+            else:
+                area = json_obj["area"]
+            print name,"-",area,"pair is added to redis."
+            r.set(name,area)
+
+
+def f_61():
+    r = start_redis()
+    name = "Michael Jackson"
+    print "%s plays in %s"%(name,r.get("Michael Jackson"))
+
+def f_62():
+    r = start_redis()
+    print "%s artists play in Japan."%sum([1 for i in r.keys() if r.get(i) == "Japan"])
+    
+
+def add_tagobjs_to_redis(r):
+    import json
+    with open("artist.json","r") as f:
+        for i in f:
+            json_obj = json.loads(i)
+            name = json_obj["name"]
+            if "tags" not in json_obj.keys():
+                tags = ""
+            else:
+                tags = json_obj["tags"]
+            r.set(name,tags)
+
+def print_tagobjs_from_redis(r):
+    for i in r.keys():
+        tags = r.get(i)
+        print i,
+        if tags == "":
+            print "NO_TAGS"
+        else:
+            print tags
+
+def f_63():
+    r = start_redis()
+    #add_tagobjs_to_redis(r)
+    print_tagobjs_from_redis(r)
+
 def main():
     #f_00()
     #f_01()
@@ -1417,7 +1476,11 @@ def main():
     #f_56()
     #f_57()
     #f_58()
-    f_59()
+    #f_59()
+    #f_60()
+    #f_61()
+    #f_62()
+    f_63()
 
 if __name__ == "__main__":
     main()
