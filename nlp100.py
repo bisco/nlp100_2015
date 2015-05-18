@@ -1416,6 +1416,29 @@ def f_63():
     #add_tagobjs_to_redis(r)
     print_tagobjs_from_redis(r)
 
+def mongocl_db():
+    from pymongo import MongoClient
+    client = MongoClient("localhost",27017)
+    db = client.nlp100_2015
+    return db
+
+def f_64():
+    import json
+    db = mongocl_db()
+    posts = db.posts
+    with open("artist.json","r") as f:
+        for i in f:
+            json_obj = json.loads(i)
+            posts.insert(json_obj)
+
+# バグってる
+#def f_64_mkindex():
+#    db = mongocl_db()
+#    posts = db.posts
+#    from pymongo import DESCENDING
+#    posts.create_index([("name",DESCENDING),("aliases.name",DESCENDING),
+#                        ("tags.value",DESCENDING),("rating.value",DESCENDING)])
+
 def main():
     #f_00()
     #f_01()
@@ -1480,7 +1503,9 @@ def main():
     #f_60()
     #f_61()
     #f_62()
-    f_63()
+    #f_63()
+    #f_64()
+    #f_64_mkindex()
 
 if __name__ == "__main__":
     main()
