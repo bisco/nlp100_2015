@@ -1431,13 +1431,61 @@ def f_64():
             json_obj = json.loads(i)
             posts.insert(json_obj)
 
-# バグってる
-#def f_64_mkindex():
-#    db = mongocl_db()
-#    posts = db.posts
-#    from pymongo import DESCENDING
-#    posts.create_index([("name",DESCENDING),("aliases.name",DESCENDING),
-#                        ("tags.value",DESCENDING),("rating.value",DESCENDING)])
+def f_64_mkindex():
+    db = mongocl_db()
+    posts = db.posts
+    from pymongo import DESCENDING
+    # aliases.name, tags.value, rating.valueを持っていない要素があるので、
+    # indexingに失敗する。nameは全要素持っているので、nameだけでとりあえずつけておく。 
+    posts.create_index([("name",DESCENDING)])
+
+
+def f_65():
+    db = mongocl_db()
+    posts = db.posts
+    for post in posts.find({"name":"Queen"}):
+        print post
+
+
+def f_66():
+    db = mongocl_db()
+    posts = db.posts
+    print "The number of artists plays in Japan is %d"%posts.find({"area":"Japan"}).count()
+
+
+def f_67(artist="Silhouettes"):
+    db = mongocl_db()
+    posts = db.posts
+    for post in posts.find({"aliases.name":artist}):
+        print post
+
+
+def f_68():
+    db = mongocl_db()
+    posts = db.posts
+    dance_ratings = {}
+    for post in posts.find({"tags.value":"dance"}):
+        if "rating" in post.keys():
+            dance_ratings[post["name"]] = post["rating"]["value"]
+        else:
+            pass
+    
+    rank = 1
+    count = 0
+    prev_score = 0
+    for i in sorted(dance_ratings.items(),key=lambda x: -x[1]):
+        if i[1] >= prev_score:
+            prev_score = i[1]
+            count += 1
+        else:
+            rank += count
+            count = 1
+            if rank > 10:
+                break
+        print "<Rank %d: RATING=%d> Artist Name: %s"%(rank,i[1],i[0])
+
+    print "TOTAL: %d artists"%(rank-1)
+            
 
 def main():
     #f_00()
@@ -1506,6 +1554,10 @@ def main():
     #f_63()
     #f_64()
     #f_64_mkindex()
+    #f_65()
+    #f_66()
+    #f_67()
+    f_68()
 
 if __name__ == "__main__":
     main()
