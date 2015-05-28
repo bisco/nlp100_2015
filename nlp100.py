@@ -1485,6 +1485,29 @@ def f_68():
         print "<Rank %d: RATING=%d> Artist Name: %s"%(rank,i[1],i[0])
 
     print "TOTAL: %d artists"%(rank-1)
+
+
+def f_69():
+    # 検索して表示するところまで
+    from bottle import route, run, template, request
+    db = mongocl_db()
+    posts = db.posts
+
+    @route("/")
+    def docroot():
+        artist_name = request.query.artist_name
+        artist_another_name = request.query.artist_another_name
+        tag = request.query.tag
+        ans = []
+        #for i in posts.find({"name":artist_name,"aliases.name":artist_another_name,"tag.value":tag}):
+        for i in posts.find({"name":artist_name}):
+            if "area" not in i.keys():
+                i["area"] = "NOWHERE"
+            ans.append({"name":i["name"],"area":i["area"]})
+        
+        return template("root",ans=ans)
+
+    run(host="",port=8080,debug=True,reloader=True)
             
 
 def main():
@@ -1557,7 +1580,8 @@ def main():
     #f_65()
     #f_66()
     #f_67()
-    f_68()
+    #f_68()
+    f_69()
 
 if __name__ == "__main__":
     main()

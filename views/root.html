@@ -1,0 +1,23 @@
+<h1>Welcome to f_69</h1>
+
+<form>
+<table border="0">
+<tr>
+    <td align="right">アーティスト名</td>
+    <td><input type="text" name="artist_name" size=30></td>
+</tr>
+<tr>
+    <td align="right">アーティスト別名</td>
+    <td><input type="text" name="artist_another_name" size=30></td>
+</tr>
+<tr>
+    <td align="right">タグ</td>
+    <td><input type="text" name="tag" size=30></td>
+</tr>
+</table>
+<button onclick="">検索</button>
+</form>
+
+% for i in ans:
+{{i["name"]}} @ {{i["area"]}}<br>
+% end
