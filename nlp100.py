@@ -1489,6 +1489,7 @@ def f_68():
 
 def f_69():
     # 検索して表示するところまで
+    # 現状artist_nameのみ対応
     from bottle import route, run, template, request
     db = mongocl_db()
     posts = db.posts
@@ -1509,6 +1510,33 @@ def f_69():
 
     run(host="",port=8080,debug=True,reloader=True)
             
+
+def f_70():
+    pos_filename = "rt-polaritydata/rt-polarity.pos"
+    neg_filename = "rt-polaritydata/rt-polarity.neg"
+    
+    def add_1(filename,pos=True):
+        if pos:
+            label = "+1"
+        else:
+            label = "-1"
+
+        with open(filename) as f:
+            ret = [label+" "+i for i in f]
+        return ret
+
+    pos_list = add_1(pos_filename, True)
+    neg_list = add_1(neg_filename, False)
+    all_list = pos_list + neg_list
+    import random
+    random.shuffle(all_list)
+
+    out_filename = "sentiment.txt"
+    with open(out_filename,"w") as f:
+        for i in all_list:
+            f.write(i)
+    print "pos: %d"%len(pos_list)
+    print "neg: %d"%len(neg_list)
 
 def main():
     #f_00()
@@ -1581,7 +1609,8 @@ def main():
     #f_66()
     #f_67()
     #f_68()
-    f_69()
+    #f_69()
+    f_70()
 
 if __name__ == "__main__":
     main()
