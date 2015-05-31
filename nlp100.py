@@ -1520,7 +1520,6 @@ def f_70():
             label = "+1"
         else:
             label = "-1"
-
         with open(filename) as f:
             ret = [label+" "+i for i in f]
         return ret
@@ -1537,6 +1536,78 @@ def f_70():
             f.write(i)
     print "pos: %d"%len(pos_list)
     print "neg: %d"%len(neg_list)
+
+
+def f_71():
+    def count_words(count):
+        word_dict = {}
+        with open("sentiment.txt") as f:
+            for line in f:
+                words = line.strip().split(" ")
+                for w in words:
+                    if w == "":
+                        continue
+                    if w not in word_dict:
+                        word_dict[w] = 0
+                    else:
+                       word_dict[w] += 1
+        print "\tstop_words = set([",
+        _count = 0
+        for i in sorted(word_dict.items(), key=lambda x:-x[1]):
+            #print "%s: %d"%(i[0],i[1])
+            if _count % 5 == 0:
+                print "\n\t\t",
+            if "'" in i[0]:
+                print '"%s",'%i[0],
+            else:
+                print "'%s',"%i[0],
+            _count += 1
+            if count == _count:
+                break
+        print "\n\t])"
+    #count_words(100)
+
+    """
+    count_words関数で求めた単語出現頻度 top100 は以下。(単語:出現回数)
+    極性判定に関係ありそうな語(goodやfunnyなどの形容詞)を除いて
+    全てストップワードとする。
+    """
+    def is_stopword(word):
+        stop_words = set([ 
+            '.', 'the', ',', 'a', 'and', 
+            'of', '+1', '-1', 'to', 'is', 
+            'in', 'that', 'it', 'as', 'but', 
+            'with', 'film', 'this', 'for', 'its', 
+            'an', 'movie', "it's", 'be', 'on', 
+            'you', 'not', 'by', 'about', 'one', 
+            'more', 'has', 'are', 'at', 
+            'from', 'than', '"', 'all', '--', 
+            'his', 'have', 'so', 'if', 'or', 
+            'story', 'i', 'too', 'just', 'who', 
+            'into', 'what', 'most', 'out', 'no', 
+            'much', 'even', 'up', 'will', 
+            'comedy', 'time', 'can', 'some', 'characters', 
+            'only', 'little', 'way', 'their', 
+            'make', 'enough', 'been', 'very', 'your', 
+            'never', 'when', 'makes', 'there', 'may', 
+            'us', 'which', 'work', 'he', 
+            'director', "doesn't", ')', 'any', 
+            '?', '(', 'love', 'would', 'life', 
+            'they', 'while', ':', 'we', 'was', 
+        ])
+        return word.lowercase() in stop_words
+
+    def test_stopword():
+        assert "The word is not stop word", is_stopword("good") == False
+        assert "The word is stop word", is_stopword("no") == False
+        assert "Uppercase is converted to lowercase", is_stopword("NO") == True
+        assert "Camel Case", is_stopword("tHeRe") == True
+        assert "Symbol '.'", is_stopword(".") == True
+        assert "Symbol ':'", is_stopword(":") == True
+        assert 'Symbol \'"\'', is_stopword('"') == True
+        assert "Symbol \"'\"", is_stopword("'") == True
+
+    test_stopword()
 
 def main():
     #f_00()
@@ -1610,7 +1681,8 @@ def main():
     #f_67()
     #f_68()
     #f_69()
-    f_70()
+    #f_70()
+    f_71()
 
 if __name__ == "__main__":
     main()
