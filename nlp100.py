@@ -1537,6 +1537,36 @@ def f_70():
     print "pos: %d"%len(pos_list)
     print "neg: %d"%len(neg_list)
 
+"""
+count_words関数で求めた単語出現頻度 top100 は以下。(単語:出現回数)
+極性判定に関係ありそうな語(goodやfunnyなどの形容詞)を除いて
+全てストップワードとする。
+"""
+def is_stopword(word):
+    stop_words = set([ 
+        '.', 'the', ',', 'a', 'and', 
+        'of', '+1', '-1', 'to', 'is', 
+        'in', 'that', 'it', 'as', 'but', 
+        'with', 'film', 'this', 'for', 'its', 
+        'an', 'movie', "it's", 'be', 'on', 
+        'you', 'not', 'by', 'about', 'one', 
+        'more', 'has', 'are', 'at', 
+        'from', 'than', '"', 'all', '--', 
+        'his', 'have', 'so', 'if', 'or', 
+        'story', 'i', 'too', 'just', 'who', 
+        'into', 'what', 'most', 'out', 'no', 
+        'much', 'even', 'up', 'will', 
+        'comedy', 'time', 'can', 'some', 'characters', 
+        'only', 'little', 'way', 'their', 
+        'make', 'enough', 'been', 'very', 'your', 
+        'never', 'when', 'makes', 'there', 'may', 
+        'us', 'which', 'work', 'he', 
+        'director', "doesn't", ')', 'any', 
+        '?', '(', 'love', 'would', 'life', 
+        'they', 'while', ':', 'we', 'was', 
+    ])
+    return word.lower() in stop_words
+
 
 def f_71():
     def count_words(count):
@@ -1567,36 +1597,6 @@ def f_71():
         print "\n\t])"
     #count_words(100)
 
-    """
-    count_words関数で求めた単語出現頻度 top100 は以下。(単語:出現回数)
-    極性判定に関係ありそうな語(goodやfunnyなどの形容詞)を除いて
-    全てストップワードとする。
-    """
-    def is_stopword(word):
-        stop_words = set([ 
-            '.', 'the', ',', 'a', 'and', 
-            'of', '+1', '-1', 'to', 'is', 
-            'in', 'that', 'it', 'as', 'but', 
-            'with', 'film', 'this', 'for', 'its', 
-            'an', 'movie', "it's", 'be', 'on', 
-            'you', 'not', 'by', 'about', 'one', 
-            'more', 'has', 'are', 'at', 
-            'from', 'than', '"', 'all', '--', 
-            'his', 'have', 'so', 'if', 'or', 
-            'story', 'i', 'too', 'just', 'who', 
-            'into', 'what', 'most', 'out', 'no', 
-            'much', 'even', 'up', 'will', 
-            'comedy', 'time', 'can', 'some', 'characters', 
-            'only', 'little', 'way', 'their', 
-            'make', 'enough', 'been', 'very', 'your', 
-            'never', 'when', 'makes', 'there', 'may', 
-            'us', 'which', 'work', 'he', 
-            'director', "doesn't", ')', 'any', 
-            '?', '(', 'love', 'would', 'life', 
-            'they', 'while', ':', 'we', 'was', 
-        ])
-        return word.lowercase() in stop_words
-
     def test_stopword():
         assert "The word is not stop word", is_stopword("good") == False
         assert "The word is stop word", is_stopword("no") == False
@@ -1608,6 +1608,17 @@ def f_71():
         assert "Symbol \"'\"", is_stopword("'") == True
 
     test_stopword()
+
+def f_72():
+    # とりあえずベースラインをやってみる
+    feature = {}
+    with open("sentiment.txt","r") as f:
+        for _line in f:
+            line = _line.strip().split()
+            key = [i for i in line if not is_stopword(i)]
+            feature[tuple(key)] = int(line[0])
+    print feature
+
 
 def main():
     #f_00()
@@ -1682,7 +1693,8 @@ def main():
     #f_68()
     #f_69()
     #f_70()
-    f_71()
+    #f_71()
+    f_72()
 
 if __name__ == "__main__":
     main()
